@@ -1,6 +1,7 @@
 package com.example.its.web.issue;
 
 import com.example.its.domain.issue.IssueEntity;
+import com.example.its.domain.issue.IssueService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,17 +11,12 @@ import java.util.List;
 @Controller
 public class IssueController {
 
+    private final IssueService issueService = new IssueService();
 
     @GetMapping("/issues")
     public String showList(Model model) {
-        var issueList = List.of(
-                new IssueEntity(1, "概要1", "説明1"),
-                new IssueEntity(2, "概要2", "説明2"),
-                new IssueEntity(3, "概要3", "説明3")
-        );
-        model.addAttribute("issueList", issueList);
-
-        return "issues/List"; // テンプレートから見てissuesのディレクトリ内にあるList.htmlをさしている
+        model.addAttribute("issueList", issueService.findAll()); // IssueService.javaからfindAllを受け取る
+        return "issues/List"; // テンプレートフォルダから見てissuesのディレクトリ内にあるList.htmlをさしている
     }
 }
 
