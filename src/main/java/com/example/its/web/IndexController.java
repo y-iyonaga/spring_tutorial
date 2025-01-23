@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller // Springにコントローラークラスだと伝える
 public class IndexController {
 
+
     @GetMapping("/") //getのトップページに紐づけてる
 //    @ResponseBody // 戻り値がそのままレスポンスになる　←retuneを直書きではなくファイル指定にしたためいらなくなった
     public String index() {
