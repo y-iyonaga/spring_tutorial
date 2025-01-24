@@ -45,10 +45,11 @@ public class IssueController {
     // GET localhost8080/issue/1  ←課題詳細のパス想定　１は課題のid
     @GetMapping("/{issueId}") // {}で囲うことで動的なパスに対応してる
     public String showDetail(@PathVariable("issueId") long issueId, Model model) { // {issueId}に合わせて@PathVariableに入れて動的なパスに対応してる
-        var dummyEntity = new IssueEntity(1, "概要", "説明"); // 本来はダミーではなくDBで検索をかける
-        model.addAttribute("issue", dummyEntity);
+        model.addAttribute("issue", issueService.findById(issueId));
         return "issues/detail";
     }
+
+
 
 }
 

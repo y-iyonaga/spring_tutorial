@@ -23,4 +23,8 @@ public class IssueService {
         // 後処理が増えたとする (トランザクション確認用)
 //        throw new IllegalStateException("NG");
     }
+
+    public IssueEntity findById(long issueId) {
+        return issueRepository.findById(issueId);
+    }
 }
