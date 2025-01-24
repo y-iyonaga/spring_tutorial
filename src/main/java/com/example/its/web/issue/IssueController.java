@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class IssueController {
 
     private final IssueService issueService;
 
+    // GET /issues ←このリクエストが来た時用
     @GetMapping
     public String showList(Model model) {
         model.addAttribute("issueList", issueService.findAll()); // IssueService.javaからfindAllを受け取る
@@ -27,6 +29,13 @@ public class IssueController {
     @GetMapping("/creationForm")
     public String showCreationForm() {
         return "issues/creationForm";
+    }
+
+    // POST /issues  ←これが来た時用
+    @PostMapping
+    public String create(IssueForm form,Model model) {
+        // TODO データの永続化
+        return showList(model); // TODO リロードボタン対策が必要
     }
 }
 

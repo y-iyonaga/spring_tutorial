@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>課題作成</h1>
-<form>
+<form action="#" th:action="@{/issues}" th:method="post"> <!-- thは@PostMapping、create(IssueForm form,Model model)を表してる -->
     <div>
         <label for="summaryInput">概要</label> <!-- Inputの説明 -->
         <input type="text" id="summaryInput">
