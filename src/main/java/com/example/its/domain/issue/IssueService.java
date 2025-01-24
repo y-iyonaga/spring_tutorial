@@ -20,7 +20,7 @@ public class IssueService {
     public void create(String summary, String description) {
         issueRepository.insert(summary, description);
 
-        // 後処理が増えたとする (トランザクションの考え方)
+        // 後処理が増えたとする (トランザクション確認用)
 //        throw new IllegalStateException("NG");
     }
 }

@@ -37,7 +37,7 @@ public class IssueController {
     @PostMapping
     public String create(IssueForm form,Model model) {
         issueService.create(form.getSummary(),form.getDescription());
-        return showList(model); // TODO リロードボタン対策が必要
+        return "redirect:/issues"; // ここでリロードした際にもう一度postすることを防ぐ(2重サブミット対策)
     }
 }
 
