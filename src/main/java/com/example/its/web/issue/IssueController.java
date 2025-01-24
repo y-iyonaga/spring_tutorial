@@ -7,10 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -44,5 +41,14 @@ public class IssueController {
         issueService.create(form.getSummary(),form.getDescription());
         return "redirect:/issues"; // ここでリロードした際にもう一度postすることを防ぐ(2重サブミット対策)
     }
+
+    // GET localhost8080/issue/1  ←課題詳細のパス想定　１は課題のid
+    @GetMapping("/{issueId}") // {}で囲うことで動的なパスに対応してる
+    public String showDetail(@PathVariable("issueId") long issueId, Model model) { // {issueId}に合わせて@PathVariableに入れて動的なパスに対応してる
+        var dummyEntity = new IssueEntity(1, "概要", "説明"); // 本来はダミーではなくDBで検索をかける
+        model.addAttribute("issue", dummyEntity);
+        return "issues/detail";
+    }
+
 }
 
