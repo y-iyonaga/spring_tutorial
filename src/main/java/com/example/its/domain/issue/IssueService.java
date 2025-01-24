@@ -16,7 +16,7 @@ public class IssueService {
         return  issueRepository.findAll();
     }
 
-    @Transactional
+    @Transactional //トランザクションのアノテーション
     public void create(String summary, String description) {
         issueRepository.insert(summary, description);
 
