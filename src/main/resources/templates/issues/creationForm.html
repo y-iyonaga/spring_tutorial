@@ -10,10 +10,12 @@
     <div>
         <label for="summaryInput">概要</label> <!-- Inputの説明 -->
         <input type="text" id="summaryInput" th:field="*{summary}">
+        <p th:if="${#fields.hasErrors('summary')}" th:errors="*{summary}">(errors)</p> <!-- sammaryにエラーがあればifが通る。(pが有効になる) | th:errors="*{}"エラーが全件表示されるようになる -->
     </div>
     <div>
         <label for="descriptionInput">説明</label> <!-- Inputの説明 -->
         <textarea id="descriptionInput" row="10" th:field="*{description}"></textarea>
+        <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}">(errors)</p> <!-- sammaryにエラーがあればifが通る。(pが有効になる) | th:errors="*{}"エラーが全件表示されるようになる -->
     </div>
     <div>
         <button type="submit">作成</button>
