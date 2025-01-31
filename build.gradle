@@ -33,16 +33,22 @@ dependencies {
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
 	runtimeOnly 'com.h2database:h2'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	// JUnit 5 (Jupiter)
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+
 	// Spring Boot Test
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	// Mockito (モック化用)
-	testImplementation 'org.mockito:mockito-core:5.10.0'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+	// Mockito の依存関係
+	testImplementation 'org.mockito:mockito-core:5.3.1'
+	testImplementation 'org.mockito:mockito-junit-jupiter:5.3.1'
 }
+
 
 tasks.named('test') {
 	useJUnitPlatform()
+	testLogging {
+		events "passed", "skipped", "failed"
+		exceptionFormat "full"
+	}
 }
