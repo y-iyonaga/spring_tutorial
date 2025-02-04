@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper // MyBatisはこのアノテーションだけでBeanを含んでる
 public interface IssueRepository {
@@ -16,5 +17,5 @@ public interface IssueRepository {
     void insert(String summary, String description);
 
     @Select("select * from issues where id = #{issueId}")
-    IssueEntity findById(long issueId);
+    Optional<IssueEntity> findById(long issueId);
 }

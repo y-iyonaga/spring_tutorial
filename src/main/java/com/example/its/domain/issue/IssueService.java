@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,13 +19,27 @@ public class IssueService {
 
     @Transactional //トランザクションのアノテーション
     public void create(String summary, String description) {
-        issueRepository.insert(summary, description);
+        if (summary == null || summary.trim().isEmpty()) {
+            throw new IllegalArgumentException("Summary を空にすることはできません");
+        }
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Description を空にすることはできません");
+        }
+        if (summary.length() > 255) {
+            throw new IllegalArgumentException("Summary が長すぎます");
+        }
+        if (description.length() > 1000) {
+            throw new IllegalArgumentException("Description が長すぎます");
+        }
 
-        // 後処理が増えたとする (トランザクション確認用)
-//        throw new IllegalStateException("NG");
+        issueRepository.insert(summary, description);
     }
 
-    public IssueEntity findById(long issueId) {
+    public Optional<IssueEntity> findById(long issueId) {
+        if (issueId < 0) {
+            throw new IllegalArgumentException("ID は正の数値である必要があります");
+        }
         return issueRepository.findById(issueId);
     }
+
 }
