@@ -22,11 +22,11 @@ public class IssueService {
         if (summary == null || summary.trim().isEmpty()) {
             throw new IllegalArgumentException("Summary を空にすることはできません");
         }
-        if (description == null || description.trim().isEmpty()) {
-            throw new IllegalArgumentException("Description を空にすることはできません");
-        }
         if (summary.length() > 255) {
             throw new IllegalArgumentException("Summary が長すぎます");
+        }
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Description を空にすることはできません");
         }
         if (description.length() > 1000) {
             throw new IllegalArgumentException("Description が長すぎます");
@@ -35,9 +35,12 @@ public class IssueService {
         issueRepository.insert(summary, description);
     }
 
-    public Optional<IssueEntity> findById(long issueId) {
+    public Optional<IssueEntity> findById(Long issueId) {
         if (issueId < 0) {
-            throw new IllegalArgumentException("ID は正の数値である必要があります");
+            throw new IllegalArgumentException("issueId は正の数値である必要があります");
+        }
+        if (issueId == null) {
+            throw new IllegalArgumentException("issueId を空にすることはできません");
         }
         return issueRepository.findById(issueId);
     }
