@@ -9,4 +9,8 @@ public class IssueEntity {
     private long id ;
     private String summary;
     private String description;
+    private String created_at;
+    private String updated_at;
+    private String is_deleted;
+
 }

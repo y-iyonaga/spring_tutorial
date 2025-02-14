@@ -17,7 +17,13 @@
         <label for="descriptionInput" class="form-label">説明</label> <!-- Inputの説明 -->
         <textarea id="descriptionInput" row="10" th:field="*{description}" class="form-control"
                   th:classappend="${#fields.hasErrors('description')} ? is-invalid"></textarea>
-        <p class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">(errors)</p> <!-- sammaryにエラーがあればifが通る。(pが有効になる) | th:errors="*{}"エラーが全件表示されるようになる -->
+        <p class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">(errors)</p> <!-- description。(pが有効になる) | th:errors="*{}"エラーが全件表示されるようになる -->
+    </div>
+    <div class="mt-3">
+        <label for="creatorName" class="form-label">名前</label> <!-- Inputの説明 -->
+        <textarea id="creatorName" th:field="*{creatorName}" class="form-control"
+                  th:classappend="${#fields.hasErrors('creatorName')} ? is-invalid"></textarea>
+        <p class="invalid-feedback" th:if="${#fields.hasErrors('creatorName')}" th:errors="*{creatorName}">(errors)</p> <!-- creatorName。(pが有効になる) | th:errors="*{}"エラーが全件表示されるようになる -->
     </div>
     <div class="mt-3">
         <button type="submit" class="btn btn-primary">作成</button>
