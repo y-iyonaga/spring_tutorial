@@ -25,19 +25,13 @@ public class IssueService {
 
     // 課題登録
     @Transactional
-    public synchronized void createIssueWithCreator(String summary, String description, String creatorName) {
-        logger.info("★ createIssueWithCreator 実行: summary={}, description={}, creatorName={}", summary, description, creatorName);
-
-        if (issueExists(summary)) {
-            logger.warn("★ 同じ概要の課題が既に存在します: summary={}", summary);
+    public void createIssueWithCreator(String summary, String description, String creatorName) {
+        if (issueRepository.findBySummary(summary).isPresent()) {
             throw new IllegalArgumentException("同じ概要の課題が既に存在します");
         }
 
         long issueId = createIssue(summary, description);
-        logger.info("★ 課題作成成功: issueId={}", issueId);
-
         issueRepository.insertCreator(issueId, creatorName);
-        logger.info("★ 課題の作成者登録成功: issueId={}, creatorName={}", issueId, creatorName);
     }
 
 

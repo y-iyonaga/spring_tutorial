@@ -14,8 +14,9 @@ public interface IssueRepository {
     @Select("SELECT * FROM issues")
     List<IssueEntity> findAll();
 
-    @Select("SELECT * FROM issues WHERE LOWER(TRIM(summary)) = LOWER(TRIM(#{summary})) LIMIT 1 FOR UPDATE")
+    @Select("SELECT * FROM issues WHERE summary = #{summary} LIMIT 1")
     Optional<IssueEntity> findBySummary(@Param("summary") String summary);
+
 
     @Insert("INSERT INTO issues (summary, description) VALUES (#{summary}, #{description})")
     void insert(@Param("summary") String summary, @Param("description") String description);
