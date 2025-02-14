@@ -35,7 +35,7 @@ public class IssueService {
     }
 
 
-    // ここで既存の課題をチェック
+    // ここで既存の課題をチェック（トランザクション管理は createIssueWithCreator 側で行う）
     @Transactional
     private synchronized boolean issueExists(String summary) {
         String normalizedSummary = Normalizer.normalize(summary, Normalizer.Form.NFKC);
