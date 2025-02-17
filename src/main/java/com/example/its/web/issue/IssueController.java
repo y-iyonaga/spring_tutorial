@@ -1,5 +1,6 @@
 package com.example.its.web.issue;
 
+import com.example.its.domain.issue.IssueDetailDto;
 import com.example.its.domain.issue.IssueEntity;
 import com.example.its.domain.issue.IssueService;
 import lombok.RequiredArgsConstructor;
@@ -49,10 +50,10 @@ public class IssueController {
     }
 
     // GET localhost8080/issue/1  ←課題詳細のパス想定　１は課題のid
-    @GetMapping("/{issueId}") // {}で囲うことで動的なパスに対応してる
-    public String showDetail(@PathVariable("issueId") long issueId, Model model) { // {issueId}に合わせて@PathVariableに入れて動的なパスに対応してる
-        IssueEntity issue = issueService.findById(issueId)
-                .orElseThrow(); // Optional<IssueEntity> の中身を orElseThrow() で 取り出し (IssueEntity) に変換
+    @GetMapping("/{issueId}")
+    public String showDetail(@PathVariable("issueId") long issueId, Model model) {
+        IssueDetailDto issue = issueService.findDetailById(issueId)
+                .orElseThrow();
         model.addAttribute("issue", issue);
         return "issues/detail";
     }
