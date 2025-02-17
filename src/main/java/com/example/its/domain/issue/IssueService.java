@@ -18,9 +18,13 @@ public class IssueService {
     private static final Logger logger = LoggerFactory.getLogger(IssueService.class);
     private final IssueRepository issueRepository;
 
-    // 課題全件取得
-    public List<IssueEntity> findAll() {
-        return issueRepository.findAll();
+
+    // 課題の一覧・検索
+    public List<IssueEntity> findIssues(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return issueRepository.findAllActiveIssues();
+        }
+        return issueRepository.searchIssues(keyword);
     }
 
     // 課題登録

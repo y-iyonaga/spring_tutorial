@@ -11,8 +11,6 @@ import java.util.Optional;
 @Mapper
 public interface IssueRepository {
 
-    @Select("SELECT * FROM issues")
-    List<IssueEntity> findAll();
 
     @Select("SELECT * FROM issues WHERE summary = #{summary} LIMIT 1")
     Optional<IssueEntity> findBySummary(@Param("summary") String summary);
@@ -29,4 +27,12 @@ public interface IssueRepository {
 
     @Select("SELECT LAST_INSERT_ID()")
     long getLastInsertId();
+
+    // 削除されていない課題を全件取得
+    @Select("SELECT * FROM issues WHERE is_deleted = FALSE")
+    List<IssueEntity> findAllActiveIssues();
+
+    // 課題のあいまい検索（概要・詳細）
+    @Select("SELECT * FROM issues WHERE is_deleted = FALSE AND (summary LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))")
+    List<IssueEntity> searchIssues(@Param("keyword") String keyword);
 }

@@ -20,9 +20,11 @@ public class IssueController {
 
     // GET /issues ←このリクエストが来た時用
     @GetMapping
-    public String showList(Model model) {
-        model.addAttribute("issueList", issueService.findAll()); // IssueService.javaからfindAllを受け取る
-        return "issues/List"; // テンプレートフォルダから見てissuesのディレクトリ内にあるList.htmlをさしている
+    // 課題一覧（検索付き）
+    public String showList(@RequestParam(value = "keyword", required = false) String keyword, Model model) {
+        model.addAttribute("issueList", issueService.findIssues(keyword));
+        model.addAttribute("keyword", keyword);
+        return "issues/list";
     }
 
     // GET /issues/creationForm  ←このリクエストが来た時用
