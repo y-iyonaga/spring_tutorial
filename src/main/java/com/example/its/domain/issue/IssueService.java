@@ -57,10 +57,11 @@ public class IssueService {
     }
 
     // 課題詳細取得
-    public Optional<IssueEntity> findById(Long issueId) {
+    public Optional<IssueDetailDto> findDetailById(Long issueId) {
         if (issueId == null || issueId < 0) {
             throw new IllegalArgumentException("issueId は正の数値である必要があります");
         }
         return issueRepository.findById(issueId);
     }
+
 }

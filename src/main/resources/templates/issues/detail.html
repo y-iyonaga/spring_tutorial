@@ -2,14 +2,29 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/layout :: layout(~{::title}, ~{::body})}">
 <head>
-    <title>課題詳細　｜　課題管理アプリケーション</title>
+    <title>課題詳細 | 課題管理アプリケーション</title>
 </head>
 <body>
 <h1 class="mt-3">課題詳細</h1>
 <a href="./list.html" th:href="@{/issues}">一覧に戻る</a>
-<div>
-    <h2 th:text="${issue?.summary ?: '未設定'}">(summary)</h2>
-    <p th:text="${issue?.description ?: '説明なし'}">(description)</p>
+<div class="mt-3">
+    <h2>課題概要</h2>
+    <p th:text="${issue.summary}">(summary)</p>
+</div>
+<div class="mt-3">
+    <h2>課題詳細</h2>
+    <p th:text="${issue.description}">(description)</p>
+</div>
+<div class="mt-3">
+    <h2>登録者</h2>
+    <p th:text="${issue.creatorName ?: '不明'}">(creatorName)</p>
+</div>
+<div class="mt-3">
+    <h2>登録/更新日時</h2>
+    <p>
+        <span th:text="${issue.created_at ?: '未設定'}">(created_at)</span> /
+        <span th:text="${issue.updated_at ?: '未設定'}">(updated_at)</span>
+    </p>
 </div>
 </body>
 </html>

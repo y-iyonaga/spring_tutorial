@@ -5,11 +5,11 @@ import lombok.Data;
 
 @AllArgsConstructor
 @Data
-public class IssueEntity {
+public class IssueDetailDto {
     private long id;
     private String summary;
     private String description;
+    private String creatorName;
     private String created_at;
     private String updated_at;
-    private String is_deleted;
 }

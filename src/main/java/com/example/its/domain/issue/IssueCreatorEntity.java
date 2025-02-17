@@ -12,3 +12,4 @@ public class IssueCreatorEntity {
     private String creatorName;
     private String tourokuDate;
 }
+
