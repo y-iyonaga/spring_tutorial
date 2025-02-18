@@ -1,5 +1,6 @@
 package com.example.its.domain.issue;
 
+import com.example.its.web.issue.IssueForm;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -11,61 +12,100 @@ import java.text.Normalizer;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 課題のビジネスロジックを担当するサービスクラス
+ * - 課題の検索、登録、更新、削除を管理
+ */
 @Service
 @RequiredArgsConstructor
 public class IssueService {
 
-    private static final Logger logger = LoggerFactory.getLogger(IssueService.class);
-    private final IssueRepository issueRepository;
+    private static final Logger logger = LoggerFactory.getLogger(IssueService.class); // ログメッセージを出力できる。logger～のやつ
+    private final IssueRepository issueRepository; // 課題データを扱うリポジトリ
 
-
-    // 課題の一覧・検索
+    /**
+     * 課題の一覧を取得する（検索機能付き）
+     *
+     * @param keyword 検索キーワード（null または空文字の場合は全件取得）
+     * @return 検索結果または全課題のリスト
+     */
     public List<IssueEntity> findIssues(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
-            return issueRepository.findAllActiveIssues();
+            return issueRepository.findAllActiveIssues(); // 削除されていない全課題を取得
         }
-        return issueRepository.searchIssues(keyword);
+        return issueRepository.searchIssues(keyword); // キーワード検索で課題を取得
     }
 
-    // 課題登録
+// ---------------------------------------------------------------
+    /**
+     * 新しい課題を作成し、作成者情報を登録する
+     *
+     * @param summary     課題の概要
+     * @param description 課題の詳細
+     * @param creatorName 作成者名
+     * @throws IllegalArgumentException 同じ概要の課題が既に存在する場合
+     */
     @Transactional
     public void createIssueWithCreator(String summary, String description, String creatorName) {
         if (issueRepository.findBySummary(summary).isPresent()) {
-            throw new IllegalArgumentException("同じ概要の課題が既に存在します");
+            throw new IllegalArgumentException("同じ概要の課題が既に存在します"); // 既存の課題チェック
         }
-
-        long issueId = createIssue(summary, description);
-        issueRepository.insertCreator(issueId, creatorName);
+        IssueEntity issue = createIssue(summary, description);
+        issueRepository.insertCreator(issue.getId(), creatorName); // 作成者情報を登録
     }
-
-
-    // ここで既存の課題をチェック（トランザクション管理は createIssueWithCreator 側で行う）
-    @Transactional
-    private synchronized boolean issueExists(String summary) {
-        String normalizedSummary = Normalizer.normalize(summary, Normalizer.Form.NFKC);
-        Optional<IssueEntity> existingIssue = issueRepository.findBySummary(normalizedSummary);
-
-        logger.info("★ issueExists 実行: summary={}, 存在する?={}", normalizedSummary, existingIssue.isPresent());
-
-        return existingIssue.isPresent();
-    }
-
-
-    // 課題登録（トランザクション管理は createIssueWithCreator 側で行う）
-    private long createIssue(String summary, String description) {
+    /**
+     * 課題を作成し、データベースに保存する
+     *
+     * @param summary     課題の概要
+     * @param description 課題の詳細
+     * @return 作成された課題のエンティティ
+     */
+    private IssueEntity createIssue(String summary, String description) {
         logger.info("★ createIssue 実行: summary={}, description={}", summary, description);
-        issueRepository.insert(summary, description);
-        long lastInsertId = issueRepository.getLastInsertId();
-        logger.info("★ getLastInsertId() の結果: {}", lastInsertId);
-        return lastInsertId;
+        IssueEntity issue = new IssueEntity(0, summary, description, null, null, false);
+        issueRepository.insert(issue); // 課題をデータベースに登録
+        logger.info("★ 課題登録完了: id={}", issue.getId());
+        return issue;
     }
+// ---------------------------------------------------------------
 
-    // 課題詳細取得
-    public Optional<IssueDetailDto> findDetailById(Long issueId) {
+    /**
+     * 指定された ID の課題詳細を取得する
+     *
+     * @param issueId 課題の ID
+     * @return 課題の詳細情報（存在しない場合は empty）
+     * @throws IllegalArgumentException issueId が null または負の数の場合
+     */
+    public Optional<IssueForm> findDetailById(Long issueId) {
         if (issueId == null || issueId < 0) {
             throw new IllegalArgumentException("issueId は正の数値である必要があります");
         }
-        return issueRepository.findById(issueId);
+        return issueRepository.findDetailById(issueId); // 課題詳細を取得
     }
 
+    /**
+     * 課題を更新する（変更がない場合は更新しない）
+     *
+     * @param form 更新対象の課題情報
+     * @return 更新成功時は true、変更がなかった場合は false
+     */
+    @Transactional
+    public boolean updateIssue(IssueForm form) {
+        int updatedRows = issueRepository.updateIssue(form.getId(), form.getSummary(), form.getDescription());
+        int updatedCreatorRows = issueRepository.updateCreator(form.getId(), form.getCreatorName());
+        return updatedRows > 0 || updatedCreatorRows > 0; // どちらかが更新されたら true
+    }
+
+    /**
+     * 課題を論理削除する（is_deleted フラグを true に設定）
+     *
+     * @param issueId 削除対象の課題 ID
+     * @return 削除成功時は true、対象が存在しなかった場合は false
+     */
+    @Transactional
+    public boolean deleteIssue(long issueId) {
+        int deletedRows = issueRepository.deleteIssue(issueId);
+    //  logger.info("★ deleteIssue 実行: id={}, 削除行数={}", issueId, deletedRows);
+        return deletedRows > 0; // 削除が行われた場合のみ true を返す
+    }
 }

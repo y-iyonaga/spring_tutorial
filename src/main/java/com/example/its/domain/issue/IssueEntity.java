@@ -11,5 +11,5 @@ public class IssueEntity {
     private String description;
     private String created_at;
     private String updated_at;
-    private String is_deleted;
+    private boolean is_deleted;
 }
