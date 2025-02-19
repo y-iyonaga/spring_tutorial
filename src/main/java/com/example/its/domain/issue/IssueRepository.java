@@ -34,11 +34,10 @@ public interface IssueRepository {
 
     /**
      * 課題作成者情報を登録する
-     *
      * @param issueId 課題ID
      * @param creatorName 作成者名
      */
-    @Insert("INSERT INTO issues_creator (issues_ID, creatorName) VALUES (#{issueId}, #{creatorName})")
+    @Insert("INSERT INTO issues_creator (issue_id, creator_name) VALUES (#{issueId}, #{creatorName})")
     void insertCreator(@Param("issueId") long issueId, @Param("creatorName") String creatorName);
 
     /**
@@ -69,14 +68,13 @@ public interface IssueRepository {
 
     /**
      * 課題詳細を取得する（JOIN を使用し作成者情報も取得）
-     *
      * @param issueId 課題ID
      * @return 課題の詳細情報（作成者情報を含む）
      */
     @Select("""
-        SELECT i.*, ic.creatorName 
+        SELECT i.*, ic.creator_name 
         FROM issues i 
-        LEFT JOIN issues_creator ic ON i.id = ic.issues_ID 
+        LEFT JOIN issues_creator ic ON i.id = ic.issue_id 
         WHERE i.id = #{issueId}
     """)
     Optional<IssueForm> findDetailById(@Param("issueId") long issueId);
@@ -103,18 +101,18 @@ public interface IssueRepository {
                     @Param("summary") String summary,
                     @Param("description") String description);
     /**
-     * 課題の登録者（creatorName）を更新する
-     *
+     * 課題の登録者（creator_name）を更新する
      * @param id 課題ID
      * @param creatorName 更新する登録者名
      * @return 更新された行数（0なら更新なし）
      */
     @Update("""
         UPDATE issues_creator 
-        SET creatorName = #{creatorName} 
-        WHERE issues_ID = #{id}
+        SET creator_name = #{creatorName} 
+        WHERE issue_id = #{id}
     """)
     int updateCreator(@Param("id") long id, @Param("creatorName") String creatorName);
+
 // ----------------------------------------------------------------------------------------------------
 
     /**

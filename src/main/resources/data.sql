@@ -22,7 +22,7 @@ insert into issues (summary, description) values ('モバイル対応', 'スマ�
 insert into issues (summary, description) values ('認証強化', 'パスワードポリシーを厳しくしたい');
 
 -- 課題作成者
-INSERT INTO issues_creator (issues_ID, creatorName) VALUES
+INSERT INTO issues_creator (issue_id, creator_name) VALUES
 (1, '田中'),
 (2, '佐藤'),
 (3, '鈴木'),

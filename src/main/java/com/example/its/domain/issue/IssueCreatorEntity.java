@@ -7,9 +7,8 @@ import lombok.Data;
 @Data
 public class IssueCreatorEntity {
 
-    private String ID;
-    private String issue_ID;
-    private String creatorName;
-    private String tourokuDate;
+    private String issues_creator_id;
+    private String issue_id;
+    private String creator_name;
+    private String touroku_date;
 }
-
