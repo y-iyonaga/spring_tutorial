@@ -103,9 +103,17 @@ public class IssueService {
      * @return 削除成功時は true、対象が存在しなかった場合は false
      */
     @Transactional
-    public boolean deleteIssue(long issueId) {
-        int deletedRows = issueRepository.deleteIssue(issueId);
-    //  logger.info("★ deleteIssue 実行: id={}, 削除行数={}", issueId, deletedRows);
-        return deletedRows > 0; // 削除が行われた場合のみ true を返す
+    public boolean deleteIssue(Long issueId) {
+        // issueId が NULL の場合はエラーをスロー
+        if (issueId == null) {
+            throw new IllegalArgumentException("issueId は NULL であってはなりません");
+        }
+        if (issueId < 0) {
+            throw new IllegalArgumentException("issueId は正の数値である必要があります");
+        }
+
+        return issueRepository.deleteIssue(issueId) > 0;
     }
+
+
 }

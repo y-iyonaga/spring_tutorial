@@ -86,8 +86,15 @@ public class IssueController {
      * @return 更新成功時: 課題詳細 / 失敗時: 再度詳細画面を表示
      */
     @PostMapping("/{issueId}/update")
-    public String updateIssue(@PathVariable("issueId") long issueId, @ModelAttribute IssueForm form, Model model) {
+    public String updateIssue(@PathVariable("issueId") long issueId, @Validated @ModelAttribute IssueForm form,
+                              BindingResult bindingResult, Model model) {
         form.setId(issueId); // IDをセット（更新対象の課題を指定）
+
+        // バリデーションエラーがある場合は詳細画面に戻る
+        if (bindingResult.hasErrors()) {
+            return showDetail(issueId, model);
+        }
+
         if (!issueService.updateIssue(form)) {
             model.addAttribute("errorMessage", "同じ概要の課題が既に存在するか、内容が変わっていません");
             return showDetail(issueId, model); // 更新失敗時は詳細画面を再表示
@@ -101,9 +108,12 @@ public class IssueController {
      * @return 削除後は一覧画面へリダイレクト
      */
     @PostMapping("/{issueId}/delete")
-    public String deleteIssue(@PathVariable("issueId") long issueId) {
-        issueService.deleteIssue(issueId); // 課題を削除
-        return "redirect:/issues"; // 削除後は一覧画面へリダイレクト
+    public String deleteIssue(@PathVariable("issueId") long issueId, Model model) {
+        if (!issueService.deleteIssue(issueId)) { // 削除に失敗した場合
+            model.addAttribute("errorMessage", "削除対象の課題が見つかりません");
+            return showList(null, model); // 課題一覧画面を再表示 (200 OK)
+        }
+        return "redirect:/issues"; // 削除成功時 (302 Found)
     }
 
 

@@ -33,18 +33,30 @@
 
 <!-- 更新フォーム -->
 <form action="#" th:action="@{/issues/{issueId}/update(issueId=${issueForm.id})}" th:method="post" th:object="${issueForm}">
+    <!-- IDを送るための隠しフィールド -->
+    <input type="hidden" th:field="*{id}">
+
     <div class="mt-3">
         <label for="summaryInput" class="form-label">概要</label>
-        <input type="text" id="summaryInput" th:field="*{summary}" class="form-control"/>
+        <input type="text" id="summaryInput" th:field="*{summary}" class="form-control"
+               th:classappend="${#fields.hasErrors('summary')} ? 'is-invalid'">
+        <p class="invalid-feedback" th:if="${#fields.hasErrors('summary')}" th:errors="*{summary}"></p>
     </div>
+
     <div class="mt-3">
         <label for="descriptionInput" class="form-label">説明</label>
-        <textarea id="descriptionInput" th:field="*{description}" class="form-control"></textarea>
+        <textarea id="descriptionInput" th:field="*{description}" class="form-control"
+                  th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"></textarea>
+        <p class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></p>
     </div>
+
     <div class="mt-3">
         <label for="creatorNameInput" class="form-label">登録者</label>
-        <input type="text" id="creatorNameInput" th:field="*{creatorName}" class="form-control"/>
+        <input type="text" id="creatorNameInput" th:field="*{creatorName}" class="form-control"
+               th:classappend="${#fields.hasErrors('creatorName')} ? 'is-invalid'">
+        <p class="invalid-feedback" th:if="${#fields.hasErrors('creatorName')}" th:errors="*{creatorName}"></p>
     </div>
+
     <div class="mt-3">
         <button type="submit" class="btn btn-primary">更新</button>
     </div>
