@@ -117,13 +117,13 @@ public class IssueService {
             throw new IllegalArgumentException("description は必須です");
         }
 
-        // 🔹 同じ `summary` の課題が既に存在するかチェック
+        // 同じ summary の課題が既に存在するかチェック
         Optional<IssueEntity> duplicateSummary = issueRepository.findBySummary(form.getSummary());
         if (duplicateSummary.isPresent() && duplicateSummary.get().getId() != form.getId()) {
             throw new IllegalArgumentException("同じ概要の課題が既に存在します");
         }
 
-        // 🔹 指定された issueId の課題が存在するかチェック
+        // 指定された issueId の課題が存在するかチェック
         Optional<IssueEntity> existingIssue = issueRepository.findById(form.getId());
         if (existingIssue.isEmpty()) {
             throw new RuntimeException("指定された課題が存在しません");
@@ -132,7 +132,7 @@ public class IssueService {
             throw new RuntimeException("指定された課題は削除されています");
         }
 
-        // 🔹 課題の更新処理
+        // 課題の更新処理
         int updatedRows = issueRepository.updateIssue(form.getId(), form.getSummary(), form.getDescription());
         int updatedCreatorRows = issueRepository.updateCreator(form.getId(), form.getCreatorName());
 
