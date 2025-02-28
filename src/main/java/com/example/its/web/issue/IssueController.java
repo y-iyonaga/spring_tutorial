@@ -7,6 +7,9 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 /**
  * 課題管理のコントローラークラス
@@ -26,12 +29,27 @@ public class IssueController {
      * @param model ビューにデータを渡す
      * @return 課題一覧画面
      */
+//    @GetMapping
+//    public String showList(@RequestParam(value = "keyword", required = false) String keyword, Model model) {
+//        model.addAttribute("issueList", issueService.findIssues(keyword)); // 検索結果または全課題を取得
+//        model.addAttribute("keyword", keyword); // 検索ワードを保持
+//        return "issues/list";
+//    }
     @GetMapping
-    public String showList(@RequestParam(value = "keyword", required = false) String keyword, Model model) {
-        model.addAttribute("issueList", issueService.findIssues(keyword)); // 検索結果または全課題を取得
-        model.addAttribute("keyword", keyword); // 検索ワードを保持
+    public String showList(@Validated @ModelAttribute SearchForm form, BindingResult bindingResult, Model model) {
+        // バリデーションエラーがある場合
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("errorMessage", "検索キーワードが長すぎます");
+            model.addAttribute("issueList", List.of()); // エラー時は空リストを設定
+            return "issues/list";
+        }
+
+        // 検索処理を実行
+        model.addAttribute("issueList", issueService.findIssues(form.getKeyword()));
+        model.addAttribute("keyword", form.getKeyword());
         return "issues/list";
     }
+
 
     /**
      * 課題作成フォームの表示
@@ -108,13 +126,13 @@ public class IssueController {
      * @return 削除後は一覧画面へリダイレクト
      */
     @PostMapping("/{issueId}/delete")
-    public String deleteIssue(@PathVariable("issueId") long issueId, Model model) {
+    public String deleteIssue(@PathVariable("issueId") long issueId, RedirectAttributes redirectAttributes) {
         if (!issueService.deleteIssue(issueId)) { // 削除に失敗した場合
-            model.addAttribute("errorMessage", "削除対象の課題が見つかりません");
-            return showList(null, model); // 課題一覧画面を再表示 (200 OK)
+            redirectAttributes.addFlashAttribute("errorMessage", "削除対象の課題が見つかりません");
         }
-        return "redirect:/issues"; // 削除成功時 (302 Found)
+        return "redirect:/issues"; // 削除成功時でもエラー時でも一覧画面へリダイレクト
     }
+
 
 
 }

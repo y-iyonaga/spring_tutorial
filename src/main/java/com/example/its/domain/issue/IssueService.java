@@ -30,10 +30,15 @@ public class IssueService {
      * @return 検索結果または全課題のリスト
      */
     public List<IssueEntity> findIssues(String keyword) {
+        // バリデーションを追加（controllerの@Validatedと一緒の確認を入れてる）
+        if (keyword != null && keyword.length() > 256) {
+            throw new IllegalArgumentException("検索キーワードが長すぎます");
+        }
+
         if (keyword == null || keyword.trim().isEmpty()) {
             return issueRepository.findAllActiveIssues(); // 削除されていない全課題を取得
         }
-        return issueRepository.searchIssues(keyword); // キーワード検索で課題を取得
+        return issueRepository.searchIssues(keyword);
     }
 
 // ---------------------------------------------------------------

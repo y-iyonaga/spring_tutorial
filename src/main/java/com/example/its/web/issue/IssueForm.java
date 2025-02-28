@@ -33,4 +33,9 @@ public class IssueForm {
 
     private String created_at; // 作成日時
     private String updated_at; // 更新日時
+
+// MEMO 以下バリデーションはserviceに直書きした。 @Validatedを使用しcontrollerにだけ記載してしまうと別ルートからの処理があった場合すり抜けてしまう
+//    @Size(max = 256, message = "検索キーワードは最大256文字までです")
+//    private String keyword; // 検索キーワード
+
 }

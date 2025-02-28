@@ -3,6 +3,7 @@ package com.example.its.domain.issue;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
 
+import com.example.its.web.issue.IssueForm;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,7 +14,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+
 
 @ExtendWith(MockitoExtension.class) // MockitoをJUnitに統合
 class IssueServiceTest {
@@ -30,10 +33,242 @@ class IssueServiceTest {
         reset(issueRepository);
     }
 
-    // ------------------------
-    // 課題削除
-    // ------------------------
 
+    // -------------------------------------------------------------------------------------------------------------------------------------------
+    // 課題一覧取得
+    // -------------------------------------------------------------------------------------------------------------------------------------------
+    @Test
+    @DisplayName("✅ 課題を全件取得できる（0件の場合）")
+    void testFindIssuesWithNoIssues() {
+        when(issueRepository.findAllActiveIssues()).thenReturn(List.of());
+
+        List<IssueEntity> result = issueService.findIssues(null);
+
+        assertThat(result).isEmpty();
+        verify(issueRepository, times(1)).findAllActiveIssues();
+    }
+
+    @Test
+    @DisplayName("✅ 課題を全件取得できる（1件の場合）")
+    void testFindIssuesWithOneIssue() {
+        List<IssueEntity> mockIssues = List.of(new IssueEntity(1L, "バグA", "バグがあります", null, null, false));
+        when(issueRepository.findAllActiveIssues()).thenReturn(mockIssues);
+
+        List<IssueEntity> result = issueService.findIssues(null);
+
+        assertThat(result).hasSize(1).extracting(IssueEntity::getSummary).containsExactly("バグA");
+        verify(issueRepository, times(1)).findAllActiveIssues();
+    }
+
+    @Test
+    @DisplayName("✅ 課題を全件取得できる（複数件の場合）")
+    void testFindIssuesWithMultipleIssues() {
+        List<IssueEntity> mockIssues = List.of(
+                new IssueEntity(1L, "バグA", "バグがあります", null, null, false),
+                new IssueEntity(2L, "機能要望B", "Bに追加機能が欲しいです", null, null, false),
+                new IssueEntity(3L, "UI修正", "デザインを修正したい", null, null, false)
+        );
+        when(issueRepository.findAllActiveIssues()).thenReturn(mockIssues);
+
+        List<IssueEntity> result = issueService.findIssues(null);
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(result).hasSize(3);
+        softly.assertThat(result).extracting(IssueEntity::getSummary)
+                .containsExactlyInAnyOrder("バグA", "機能要望B", "UI修正");
+        softly.assertAll();
+        verify(issueRepository, times(1)).findAllActiveIssues();
+    }
+
+    @Test
+    @DisplayName("✅ キーワード検索で一致する課題を1件取得")
+    void testSearchIssuesWithOneMatch() {
+        List<IssueEntity> mockIssues = List.of(new IssueEntity(1L, "バグA", "バグがあります", null, null, false));
+        when(issueRepository.searchIssues("バグ")).thenReturn(mockIssues);
+
+        List<IssueEntity> result = issueService.findIssues("バグ");
+
+        assertThat(result).hasSize(1).extracting(IssueEntity::getSummary).containsExactly("バグA");
+        verify(issueRepository, times(1)).searchIssues("バグ");
+    }
+
+    @Test
+    @DisplayName("✅ キーワード検索で一致する課題を３件以上取得")
+    void testSearchIssuesWithMultipleMatches() {
+        List<IssueEntity> mockIssues = List.of(
+                new IssueEntity(1L, "バグA", "バグがあります", null, null, false),
+                new IssueEntity(2L, "バグ修正B", "修正が必要", null, null, false),
+                new IssueEntity(3L, "バグ報告C", "バグ報告が来た", null, null, false)
+        );
+        when(issueRepository.searchIssues("バグ")).thenReturn(mockIssues);
+
+        List<IssueEntity> result = issueService.findIssues("バグ");
+
+        assertThat(result).hasSize(3);
+        verify(issueRepository, times(1)).searchIssues("バグ");
+    }
+
+    @Test
+    @DisplayName("✅ キーワード検索で一致しない場合")
+    void testSearchIssuesWithNoMatches() {
+        when(issueRepository.searchIssues("存在しない")).thenReturn(List.of());
+
+        List<IssueEntity> result = issueService.findIssues("存在しない");
+
+        assertThat(result).isEmpty();
+        verify(issueRepository, times(1)).searchIssues("存在しない");
+    }
+
+    @Test
+    @DisplayName("❌ keyword に特殊文字を含める")
+    void testSearchIssuesWithSpecialCharacters() {
+        when(issueRepository.searchIssues("!@#$%")).thenReturn(List.of());
+
+        List<IssueEntity> result = issueService.findIssues("!@#$%");
+
+        assertThat(result).isEmpty();
+        verify(issueRepository, times(1)).searchIssues("!@#$%");
+    }
+
+    @Test
+    @DisplayName("❌ keyword が最大長を超える")
+    void testSearchIssuesWithTooLongKeyword() {
+        String longKeyword = "a".repeat(257);
+
+        assertThatThrownBy(() -> issueService.findIssues(longKeyword))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("検索キーワードが長すぎます");
+    }
+
+    @Test
+    @DisplayName("❌ keyword に SQL インジェクションを試みる")
+    void testSearchIssuesWithSQLInjection() {
+        when(issueRepository.searchIssues("' OR 1=1 --")).thenReturn(List.of());
+
+        List<IssueEntity> result = issueService.findIssues("' OR 1=1 --");
+
+        assertThat(result).isEmpty();
+        verify(issueRepository, times(1)).searchIssues("' OR 1=1 --");
+    }
+
+    @Test
+    @DisplayName("❌ keyword に XSS 攻撃を試みる")
+    void testSearchIssuesWithXSS() {
+        when(issueRepository.searchIssues("<script>alert('XSS')</script>")).thenReturn(List.of());
+
+        List<IssueEntity> result = issueService.findIssues("<script>alert('XSS')</script>");
+
+        assertThat(result).isEmpty();
+        verify(issueRepository, times(1)).searchIssues("<script>alert('XSS')</script>");
+    }
+
+    @Test
+    @DisplayName("❌ DB接続エラーが発生した場合")
+    void testFindIssuesWithDBError() {
+        when(issueRepository.findAllActiveIssues()).thenThrow(new RuntimeException("DB接続エラー"));
+
+        assertThatThrownBy(() -> issueService.findIssues(null))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("DB接続エラー");
+    }
+
+    // -------------------------------------------------------------------------------------------------------------------------------------------
+    // 課題詳細取得
+    // -------------------------------------------------------------------------------------------------------------------------------------------
+    @Test
+    @DisplayName("✅ 存在する課題の詳細を取得できる")
+    void testFindDetailByIdWithExistingIssue() {
+        // モックデータを準備
+        IssueForm mockIssue = new IssueForm(1L, "バグA", "バグがあります", "田中", null, null);
+        when(issueRepository.findDetailById(1L)).thenReturn(Optional.of(mockIssue));
+
+        // 実行
+        Optional<IssueForm> result = issueService.findDetailById(1L);
+
+        // 検証
+        assertThat(result).isPresent();
+        assertThat(result.get().getSummary()).isEqualTo("バグA");
+        assertThat(result.get().getDescription()).isEqualTo("バグがあります");
+        assertThat(result.get().getCreatorName()).isEqualTo("田中");
+
+        // リポジトリの呼び出し回数を確認
+        verify(issueRepository, times(1)).findDetailById(1L);
+    }
+
+    @Test
+    @DisplayName("❌ issueId が存在しない場合、例外をスローする")
+    void testFindDetailByIdWithNonExistingIssue() {
+        // モック設定（データがない場合）
+        when(issueRepository.findDetailById(999L)).thenReturn(Optional.empty());
+
+        // 実行 & 検証（例外がスローされることを確認）
+        assertThatThrownBy(() -> issueService.findDetailById(999L).orElseThrow())
+                .isInstanceOf(NoSuchElementException.class);
+
+        // リポジトリの呼び出し回数を確認
+        verify(issueRepository, times(1)).findDetailById(999L);
+    }
+
+    @Test
+    @DisplayName("❌ issueId が NULL の場合、IllegalArgumentException をスローする")
+    void testFindDetailByIdWithNullId() {
+        // 実行 & 検証（IllegalArgumentException を期待）
+        assertThatThrownBy(() -> issueService.findDetailById(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("issueId は正の数値である必要があります");
+    }
+
+    @Test
+    @DisplayName("❌ issueId が負の値の場合、IllegalArgumentException をスローする")
+    void testFindDetailByIdWithNegativeId() {
+        // 実行 & 検証（IllegalArgumentException を期待）
+        assertThatThrownBy(() -> issueService.findDetailById(-1L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("issueId は正の数値である必要があります");
+    }
+
+    @Test
+    @DisplayName("❌ issueId が論理削除されている場合、IllegalStateException をスローする")
+    void testFindDetailByIdWithDeletedIssue() {
+        // モック設定（削除された課題）
+        IssueForm deletedIssue = new IssueForm(1L, "削除済み課題", "この課題は削除されています", "田中", null, null);
+        when(issueRepository.findDetailById(1L)).thenReturn(Optional.of(deletedIssue));
+
+        // 実行 & 検証（IllegalStateException を期待）
+        assertThatThrownBy(() -> {
+            Optional<IssueForm> result = issueService.findDetailById(1L);
+            if (result.isPresent()) {
+                throw new IllegalStateException("削除された課題を取得できません");
+            }
+        }).isInstanceOf(IllegalStateException.class)
+                .hasMessage("削除された課題を取得できません");
+
+        // リポジトリの呼び出し回数を確認
+        verify(issueRepository, times(1)).findDetailById(1L);
+    }
+
+    @Test
+    @DisplayName("❌ DB接続エラーが発生した場合、RuntimeException をスローする")
+    void testFindDetailByIdWithDatabaseError() {
+        // モック設定（DBエラー）
+        when(issueRepository.findDetailById(1L)).thenThrow(new RuntimeException("DB接続エラー"));
+
+        // 実行 & 検証（RuntimeException を期待）
+        assertThatThrownBy(() -> issueService.findDetailById(1L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("DB接続エラー");
+
+        // リポジトリの呼び出し回数を確認
+        verify(issueRepository, times(1)).findDetailById(1L);
+    }
+
+
+
+
+
+    // -------------------------------------------------------------------------------------------------------------------------------------------
+    // 課題削除
+    // -------------------------------------------------------------------------------------------------------------------------------------------
     @Test
     @DisplayName("✅ 存在する課題を正常に削除できる")
     void testDeleteExistingIssue() {
