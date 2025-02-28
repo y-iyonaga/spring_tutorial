@@ -25,16 +25,9 @@ public class IssueController {
 
     /**
      * 課題一覧の表示（検索機能付き）
-     * @param keyword 検索キーワード（オプション）
      * @param model ビューにデータを渡す
      * @return 課題一覧画面
      */
-//    @GetMapping
-//    public String showList(@RequestParam(value = "keyword", required = false) String keyword, Model model) {
-//        model.addAttribute("issueList", issueService.findIssues(keyword)); // 検索結果または全課題を取得
-//        model.addAttribute("keyword", keyword); // 検索ワードを保持
-//        return "issues/list";
-//    }
     @GetMapping
     public String showList(@Validated @ModelAttribute SearchForm form, BindingResult bindingResult, Model model) {
         // バリデーションエラーがある場合

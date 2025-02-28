@@ -262,8 +262,190 @@ class IssueServiceTest {
         verify(issueRepository, times(1)).findDetailById(1L);
     }
 
+    // -------------------------------------------------------------------------------------------------------------------------------------------
+    // 課題登録
+    // -------------------------------------------------------------------------------------------------------------------------------------------
+    @Test
+    @DisplayName("✅ 課題を正常に登録できる")
+    void testCreateIssueSuccessfully() {
+        // 既存の課題が存在しないことをモック設定
+        when(issueRepository.findBySummary("バグA")).thenReturn(java.util.Optional.empty());
+
+        // サービスメソッドを実行
+        issueService.createIssueWithCreator("バグA", "バグがあります", "田中");
+
+        // insert()とinsertCreator()が呼ばれたことを検証
+        verify(issueRepository, times(1)).insert(any(IssueEntity.class));
+        verify(issueRepository, times(1)).insertCreator(anyLong(), eq("田中"));
+    }
+
+    @Test
+    @DisplayName("❌ summary が NULL の場合、IllegalArgumentException をスロー")
+    void testCreateIssueWithNullSummary() {
+        assertThatThrownBy(() -> issueService.createIssueWithCreator(null, "詳細", "田中"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("summary は必須です");
+    }
+
+    @Test
+    @DisplayName("❌ description が NULL の場合、IllegalArgumentException をスロー")
+    void testCreateIssueWithNullDescription() {
+        assertThatThrownBy(() -> issueService.createIssueWithCreator("バグE", null, "田中"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("description は必須です");
+    }
+
+    @Test
+    @DisplayName("❌ summary が空の場合、IllegalArgumentException をスロー")
+    void testCreateIssueWithEmptySummary() {
+        assertThatThrownBy(() -> issueService.createIssueWithCreator("", "詳細", "田中"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("summary は必須です");
+    }
+
+    @Test
+    @DisplayName("❌ description が空の場合、IllegalArgumentException をスロー")
+    void testCreateIssueWithEmptyDescription() {
+        assertThatThrownBy(() -> issueService.createIssueWithCreator("バグD", "", "田中"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("description は必須です");
+    }
+
+    @Test
+    @DisplayName("❌ 既に存在する summary を登録しようとすると、IllegalArgumentException をスロー")
+    void testCreateIssueWithDuplicateSummary() {
+        // 既に存在する summary のモック設定
+        when(issueRepository.findBySummary("バグA")).thenReturn(java.util.Optional.of(new IssueEntity(1L, "バグA", "バグがあります", null, null, false)));
+
+        // 実行 & 検証（例外がスローされることを確認）
+        assertThatThrownBy(() -> issueService.createIssueWithCreator("バグA", "バグがあります", "田中"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("同じ概要の課題が既に存在します");
+    }
+
+    // -------------------------------------------------------------------------------------------------------------------------------------------
+    // 課題更新
+    // -------------------------------------------------------------------------------------------------------------------------------------------
+    @Test
+    @DisplayName("✅ 存在する課題を正常に更新できる")
+    void testUpdateExistingIssue() {
+        // 既存の課題データをモック
+        IssueForm form = new IssueForm(9223372036854770000L, "修正後のバグA", "修正後の詳細", "田中", null, null);
+
+        // ✅ `findById()` のモックを追加する
+        IssueEntity existingIssue = new IssueEntity(form.getId(), "元のバグA", "元の詳細", null, null, false);
+        when(issueRepository.findById(form.getId())).thenReturn(Optional.of(existingIssue));
+
+        // ✅ `findBySummary()` のモックを追加する（既に同じ summary が存在しないようにする）
+        when(issueRepository.findBySummary(form.getSummary())).thenReturn(Optional.empty());
+
+        when(issueRepository.updateIssue(form.getId(), form.getSummary(), form.getDescription())).thenReturn(1);
+        when(issueRepository.updateCreator(form.getId(), form.getCreatorName())).thenReturn(1);
+
+        // 実行
+        boolean result = issueService.updateIssue(form);
+
+        // 検証
+        assertThat(result).isTrue();
+        verify(issueRepository, times(1)).findById(form.getId()); // findById() が呼ばれたことを確認
+        verify(issueRepository, times(1)).findBySummary(form.getSummary()); // findBySummary() も確認
+        verify(issueRepository, times(1)).updateIssue(form.getId(), form.getSummary(), form.getDescription());
+        verify(issueRepository, times(1)).updateCreator(form.getId(), form.getCreatorName());
+    }
 
 
+    @Test
+    @DisplayName("❌ summary が空の場合、IllegalArgumentException をスローする")
+    void testUpdateIssueWithEmptySummary() {
+        IssueForm form = new IssueForm(9223372036854770000L, "", "詳細", "田中", null, null);
+
+        assertThatThrownBy(() -> issueService.updateIssue(form))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("summary は必須です");
+    }
+
+    @Test
+    @DisplayName("❌ description が空の場合、IllegalArgumentException をスローする")
+    void testUpdateIssueWithEmptyDescription() {
+        IssueForm form = new IssueForm(9223372036854770000L, "バグD", "", "田中", null, null);
+
+        assertThatThrownBy(() -> issueService.updateIssue(form))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("description は必須です");
+    }
+
+    @Test
+    @DisplayName("❌ summary が NULL の場合、IllegalArgumentException をスローする")
+    void testUpdateIssueWithNullSummary() {
+        IssueForm form = new IssueForm(9223372036854770000L, null, "詳細", "田中", null, null);
+
+        assertThatThrownBy(() -> issueService.updateIssue(form))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("summary は必須です");
+    }
+
+    @Test
+    @DisplayName("❌ 既に存在する summary を登録しようとすると、IllegalArgumentException をスロー")
+    void testUpdateIssueWithDuplicateSummary() {
+        // 既に存在する summary のモック設定
+        when(issueRepository.findBySummary("バグA")).thenReturn(Optional.of(new IssueEntity(1L, "バグA", "バグがあります", null, null, false)));
+
+        IssueForm form = new IssueForm(9223372036854770000L, "バグA", "修正後の詳細", "田中", null, null);
+
+        assertThatThrownBy(() -> issueService.updateIssue(form))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("同じ概要の課題が既に存在します");
+    }
+
+    @Test
+    @DisplayName("❌ 存在しない issueId の課題を更新しようとすると、RuntimeException をスローする")
+    void testUpdateNonExistingIssue() {
+        IssueForm form = new IssueForm(999L, "バグJ", "詳細", "田中", null, null);
+
+        // モックの設定（指定された ID の課題が存在しない場合）
+        when(issueRepository.findById(form.getId())).thenReturn(Optional.empty());
+
+        // 実行 & 検証（例外がスローされることを確認）
+        assertThatThrownBy(() -> issueService.updateIssue(form))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("指定された課題が存在しません");
+
+        // updateIssue() が実際に呼ばれていないことを検証
+        verify(issueRepository, never()).updateIssue(anyLong(), anyString(), anyString());
+        verify(issueRepository, never()).updateCreator(anyLong(), anyString());
+    }
+
+    @Test
+    @DisplayName("❌ issueId が NULL の場合、IllegalArgumentException をスローする")
+    void testUpdateIssueWithNullId() {
+        IssueForm form = new IssueForm(null, "バグK", "詳細", "田中", null, null);
+
+        assertThatThrownBy(() -> issueService.updateIssue(form))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("issueId は NULL であってはなりません");
+    }
+
+    @Test
+    @DisplayName("❌ issueId が負の値の場合、IllegalArgumentException をスローする")
+    void testUpdateIssueWithNegativeId() {
+        IssueForm form = new IssueForm(-9223372036854770000L, "バグL", "詳細", "田中", null, null);
+
+        assertThatThrownBy(() -> issueService.updateIssue(form))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("issueId は正の数値である必要があります");
+    }
+
+    @Test
+    @DisplayName("❌ issueId が論理削除された場合、RuntimeException をスローする")
+    void testUpdateDeletedIssue() {
+        IssueForm form = new IssueForm(9223372036854770000L, "バグO", "詳細", "田中", null, null);
+
+        when(issueRepository.findById(form.getId())).thenReturn(Optional.of(new IssueEntity(form.getId(), "バグO", "詳細", null, null, true)));
+
+        assertThatThrownBy(() -> issueService.updateIssue(form))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("指定された課題は削除されています");
+    }
 
 
     // -------------------------------------------------------------------------------------------------------------------------------------------
